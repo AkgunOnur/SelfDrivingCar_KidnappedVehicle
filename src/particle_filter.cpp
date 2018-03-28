@@ -27,9 +27,11 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// Default random generator
 	default_random_engine gen;
 
+	num_particles = 1000;
+
 	// This line creates a normal (Gaussian) distribution for x.
 	
-	particles = vector<Particle>(N);
+	particles = vector<Particle>(num_particles);
 
 	normal_distribution<double> dist_x(x, std[0]);
 
@@ -37,7 +39,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	normal_distribution<double> dist_y(y, std[1]);
 	normal_distribution<double> dist_theta(theta, std[2]);
 
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < num_particles; i++) {
 		particles[i].id = i;
 		particles[i].x = dist_x(gen);
 		particles[i].y = dist_y(gen);
@@ -59,7 +61,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	normal_distribution<double> dist_y(0, std_pos[1]);
 	normal_distribution<double> dist_theta(0, std_pos[2]);
 
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < num_particles; i++) {
 		double th = particles[i].theta;
 
 		if (abs(yaw_rate) < 0.0001) {
@@ -70,9 +72,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		else {
 			particles[i].x = particles[i].x + velocity / yaw_rate * (sin(th + yaw_rate) - sin(th)) + dist_x(gen);
 			particles[i].y = particles[i].y + velocity / yaw_rate * (cos(th) - cos(th + yaw_rate)) + dist_y(gen);
-			particles[i].theta = th + yaw_rate + dist_theta(gen);
+			particles[i].theta = th + yaw_rate * delta_t + dist_theta(gen);
 		}
-		
 	}
 
 }
@@ -100,10 +101,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 	double weight_sum = 0.0;
 
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < num_particles; i++) {
 		double th = particles[i].theta;
 		double xp = particles[i].x;
 		double yp = particles[i].y;
+		particles[i].weight = 1.0;
 
 		for (int j = 0; j < observations.size(); j++)
 		{
@@ -135,7 +137,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 	}
 
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < num_particles; i++) {
 		particles[i].weight = particles[i].weight / weight_sum;
 	}
 
@@ -148,18 +150,20 @@ void ParticleFilter::resample() {
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
 	default_random_engine gen;
-	vector<double> new_weights(N);
+	vector<Particle> new_particles;
+	vector <double> weights_(num_particles);
 
-	for (int i = 0; i < N; i++)
-	{
-		new_weights[i] = particles[i].weight;
+	for(int i = 0; i < num_particles; i++){
+		weights_[i] = particles[i].weight;
 	}
 
-	std::discrete_distribution<> dist(new_weights.begin(), new_weights.end());
+	discrete_distribution<int> dist(weights_.begin(), weights_.end());
 
-	for (int i = 0; i < N; i++) {
-		particles[i].weight = new_weights[dist(gen)];
+	for (int i=0; i<num_particles; i++) {
+		new_particles.push_back(particles[dist(gen)]);
 	}
+
+	particles = new_particles;
 
 }
 
