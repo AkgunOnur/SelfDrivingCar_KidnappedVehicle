@@ -114,17 +114,18 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 			double min_distance = 99999;
 			for (int k = 0; k < map_landmarks.landmark_list.size(); k++) {
-				double distance = dist(xo, yo, map_landmarks.landmark_list[k].x, map_landmarks.landmark_list[k].y);
+				double distance = dist(xo, yo, map_landmarks.landmark_list[k].x_f, map_landmarks.landmark_list[k].y_f);
 
 				if (distance < min_distance) {
-					observations[j].id = map_landmarks.landmark_list[k].id;
+					observations[j].id = map_landmarks.landmark_list[k].id_i;
 					min_distance = distance;
 				}
 			}
+			int id_ = observations[j].id;
 			double x_ = observations[j].x;
 			double y_ = observations[j].y;
-			double mu_x = map_landmarks.landmark_list[k].x;
-			double mu_y = map_landmarks.landmark_list[k].y;
+			double mu_x = map_landmarks.landmark_list[id_].x_f;
+			double mu_y = map_landmarks.landmark_list[id_].y_f;
 
 			double prob = exp(-pow(x_ - mu_x, 2) / (2 * pow(std_landmark[0], 2)) - pow(y_ - mu_y, 2) / (2 * pow(std_landmark[1], 2))) / (2 * M_PI*std_landmark[0] * std_landmark[1]);
 			particles[i].weight *= prob;
