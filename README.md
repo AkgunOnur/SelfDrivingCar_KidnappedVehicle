@@ -54,8 +54,4 @@ root
 
 ## Results
 
-As it can been seen below, Unscented Kalman Filter gives better tracking results than Extended Kalman Filter (can be compared with [this](https://github.com/MeRKeZ/SelfDrivingCar_ExtendedKalmanFilter) )
-
-### Results
-
 ![alt text][image1]
